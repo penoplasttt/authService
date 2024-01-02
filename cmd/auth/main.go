@@ -4,13 +4,14 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/penoplasttt/authService/internal/app"
 	"github.com/penoplasttt/authService/internal/config"
 )
 
 const (
 	envLocal = "local"
-	envDev = "dev"
-	envProd = "prod"
+	envDev   = "dev"
+	envProd  = "prod"
 )
 
 func main() {
@@ -22,6 +23,9 @@ func main() {
 
 	log.Info("starting application")
 
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+
+	application.GRPCSrv.MustRun()
 	//инициализация приложения
 
 	//запуск приложения
@@ -38,6 +42,6 @@ func setupLogger(env string) *slog.Logger {
 	case "prod":
 		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	}
-	
+
 	return log
 }
