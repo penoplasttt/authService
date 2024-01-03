@@ -3,6 +3,8 @@ package main
 import (
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/penoplasttt/authService/internal/app"
 	"github.com/penoplasttt/authService/internal/config"
@@ -25,10 +27,19 @@ func main() {
 
 	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
 
-	application.GRPCSrv.MustRun()
-	//инициализация приложения
+	go application.GRPCSrv.MustRun()
 
-	//запуск приложения
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	sig := <-sigChan
+
+	log.Info("stopping application", slog.String("signal",sig.String()))
+
+	application.GRPCSrv.Stop()
+
+	log.Info("application stopped")
+
 }
 
 func setupLogger(env string) *slog.Logger {
